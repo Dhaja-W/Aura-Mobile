@@ -22,6 +22,18 @@ export const Configurator: React.FC<ConfiguratorProps> = ({
   const [tradeInValue, setTradeInValue] = useState<number>(0);
   const [isAdded, setIsAdded] = useState<boolean>(false);
 
+  // 3D Angle Switcher State
+  const [selectedAngle, setSelectedAngle] = useState<'3D' | 'front' | 'back' | 'side'>('back');
+
+  const getImageForAngle = () => {
+    switch (selectedAngle) {
+      case '3D': return selectedFinish.imageAngle3D;
+      case 'front': return selectedFinish.imageAngleFront || selectedFinish.imageAngle3D;
+      case 'side': return selectedFinish.imageAngleSide || selectedFinish.imageAngle3D;
+      case 'back': default: return selectedFinish.imageAngleBack;
+    }
+  };
+
   // Storage price delta
   const storageOpt = selectedModel.storageOptions.find((s) => s.size === selectedStorage) || selectedModel.storageOptions[0];
   const storageDelta = storageOpt.priceDelta;
@@ -94,10 +106,27 @@ export const Configurator: React.FC<ConfiguratorProps> = ({
                 <span>{selectedFinish.name}</span> • <span>{selectedStorage}</span>
               </div>
 
+              {/* Angle Switcher Tabs (Top Right inside preview) */}
+              <div className="absolute top-6 right-6 flex items-center bg-white/90 border border-neutral-200 p-1 rounded-full shadow-2xs backdrop-blur-md z-10">
+                {(['back', 'front', 'side', '3D'] as const).map((angle) => (
+                  <button
+                    key={angle}
+                    onClick={() => setSelectedAngle(angle)}
+                    className={`px-2.5 py-1 text-[10px] font-mono uppercase rounded-full transition-all cursor-pointer ${
+                      selectedAngle === angle 
+                        ? 'bg-neutral-950 text-white font-bold shadow-xs' 
+                        : 'text-neutral-600 hover:text-neutral-950'
+                    }`}
+                  >
+                    {angle}
+                  </button>
+                ))}
+              </div>
+
               {/* Product Preview Image */}
               <div className="relative w-full max-w-sm aspect-3/4 flex items-center justify-center my-4">
                 <img
-                  src={selectedFinish.imageAngleBack}
+                  src={getImageForAngle()}
                   alt={selectedModel.name}
                   className="max-h-[380px] w-auto object-contain transition-all duration-300 drop-shadow-2xl"
                   referrerPolicy="no-referrer"
@@ -151,7 +180,7 @@ export const Configurator: React.FC<ConfiguratorProps> = ({
                     <button
                       key={model.id}
                       onClick={() => handleModelChange(model)}
-                      className={`p-4 rounded-2xl border text-left transition-all ${
+                      className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                         isSelected
                           ? 'border-neutral-950 bg-neutral-950 text-white shadow-md'
                           : 'border-neutral-200 bg-white hover:border-neutral-300 text-neutral-900'
@@ -181,7 +210,7 @@ export const Configurator: React.FC<ConfiguratorProps> = ({
                     <button
                       key={finish.id}
                       onClick={() => setSelectedFinish(finish)}
-                      className={`p-3 rounded-2xl border flex flex-col items-center gap-2 text-center transition-all ${
+                      className={`p-3 rounded-2xl border flex flex-col items-center gap-2 text-center transition-all cursor-pointer ${
                         isSelected
                           ? 'border-neutral-950 bg-neutral-50 shadow-xs'
                           : 'border-neutral-200 hover:border-neutral-300 bg-white'
@@ -213,7 +242,7 @@ export const Configurator: React.FC<ConfiguratorProps> = ({
                     <button
                       key={opt.size}
                       onClick={() => setSelectedStorage(opt.size)}
-                      className={`p-4 rounded-2xl border text-left transition-all ${
+                      className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                         isSelected
                           ? 'border-neutral-950 bg-neutral-950 text-white shadow-md'
                           : 'border-neutral-200 bg-white hover:border-neutral-300 text-neutral-900'
@@ -266,7 +295,7 @@ export const Configurator: React.FC<ConfiguratorProps> = ({
               </div>
               <button
                 onClick={() => setHasAuraCare(!hasAuraCare)}
-                className={`w-full p-4 rounded-2xl border text-left transition-all flex items-start gap-4 ${
+                className={`w-full p-4 rounded-2xl border text-left transition-all flex items-start gap-4 cursor-pointer ${
                   hasAuraCare
                     ? 'border-amber-500 bg-amber-50/50 shadow-xs'
                     : 'border-neutral-200 bg-white hover:border-neutral-300'
@@ -302,7 +331,7 @@ export const Configurator: React.FC<ConfiguratorProps> = ({
                   <button
                     key={credit}
                     onClick={() => setTradeInValue(credit)}
-                    className={`p-2.5 rounded-xl border text-center text-xs font-mono transition-all ${
+                    className={`p-2.5 rounded-xl border text-center text-xs font-mono transition-all cursor-pointer ${
                       tradeInValue === credit
                         ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-bold'
                         : 'border-neutral-200 bg-white hover:border-neutral-300 text-neutral-700'
