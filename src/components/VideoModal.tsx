@@ -6,6 +6,7 @@ interface VideoModalProps {
   onClose: () => void;
 }
 
+// Dictionary mapping chapters to real streaming stock MP4 video URLs from high-performance CDN
 const CHAPTER_VIDEOS: Record<string, string> = {
   'Titanium Architecture': 'https://player.vimeo.com/external/371433846.sd.mp4?s=236da2f3c941ba2eac857c0e5a6a6ccf6e679b30&profile_id=139&oauth2_token_id=57447761',
   'Quantum X Silicon': 'https://player.vimeo.com/external/435674703.sd.mp4?s=7f2648fb84abed3462d7c54157790b5368a5712c&profile_id=164&oauth2_token_id=57447761',
@@ -14,6 +15,7 @@ const CHAPTER_VIDEOS: Record<string, string> = {
 };
 
 export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
+  // Sync state for controlling and tracking video status
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [activeChapter, setActiveChapter] = useState('Titanium Architecture');
@@ -29,7 +31,7 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
     { title: 'Display & ProMotion', timestamp: '1:50', desc: '3000 nits peak outdoor brightness' },
   ];
 
-  // Reset video state when modal opens
+  // Reset video player playback and set playing state to true when modal is opened
   useEffect(() => {
     if (isOpen) {
       setIsPlaying(true);
@@ -37,12 +39,12 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // Sync play/pause state
+  // Synchronize React state 'isPlaying' directly with the HTML5 video play/pause commands
   useEffect(() => {
     if (videoRef.current) {
       if (isPlaying) {
         videoRef.current.play().catch(() => {
-          setIsPlaying(false);
+          setIsPlaying(false); // Fail-safe fallback if browser autoplay policy blocks playback
         });
       } else {
         videoRef.current.pause();
@@ -50,14 +52,14 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
     }
   }, [isPlaying]);
 
-  // Sync mute state
+  // Synchronize mute/unmute action with HTML5 video property
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = isMuted;
     }
   }, [isMuted]);
 
-  // Handle source changes when switching chapters
+  // Re-load and play the video when source is dynamically swapped via the chapters selection
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
@@ -69,29 +71,33 @@ export const VideoModal: React.FC<VideoModalProps> = ({ isOpen, onClose }) => {
     }
   }, [activeChapter]);
 
+  // Updates current time state on every video frame progress
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
     }
   };
 
+  // Set the total duration of the newly loaded video source
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       setDuration(videoRef.current.duration);
     }
   };
 
+  // Timeline Scrubbing: Seek video playback time based on the clicked progress bar coordinate
   const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (videoRef.current && duration > 0) {
       const rect = e.currentTarget.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const width = rect.width;
+      const clickX = e.clientX - rect.left; // Click position from left edge
+      const width = rect.width;             // Total width of the timeline
       const newTime = (clickX / width) * duration;
       videoRef.current.currentTime = newTime;
       setCurrentTime(newTime);
     }
   };
 
+  // Helper method to format video runtime into MM:SS standard format
   const formatTime = (time: number) => {
     if (isNaN(time)) return '00:00';
     const mins = Math.floor(time / 60);

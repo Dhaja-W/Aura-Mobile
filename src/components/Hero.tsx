@@ -19,13 +19,13 @@ export const Hero: React.FC<HeroProps> = ({
   const [currentAngle, setCurrentAngle] = useState<'3d' | 'front' | 'back' | 'side'>('3d');
   const [isRotating, setIsRotating] = useState(false);
 
-  // 3D Card tilt states
+  // 3D Card tilt states for interactive mouse hover inspection
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [shineStyle, setShineStyle] = useState<React.CSSProperties>({});
 
-  // Drag states for manual rotation
+  // Gesture tracking states for manual dragging/swiping to spin the phone
   const [dragStart, setDragStart] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -42,14 +42,15 @@ export const Hero: React.FC<HeroProps> = ({
     setTimeout(() => setIsRotating(false), 300);
   };
 
-  // Drag to rotate handlers
+  // Mouse move handler that combines horizontal dragging (to spin) and cursor tracking (to tilt)
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (dragStart !== null) {
+      // 1. DRAG TO SPIN: Calculate horizontal drag distance delta
       const deltaX = e.clientX - dragStart;
-      const threshold = 60; // drag 60px to rotate
+      const threshold = 60; // Require 60px swipe to transition to the next camera perspective
       
       if (Math.abs(deltaX) > threshold) {
-        const direction = deltaX > 0 ? -1 : 1;
+        const direction = deltaX > 0 ? -1 : 1; // Drag right to spin back, drag left to spin forward
         const anglesOrder: ('3d' | 'front' | 'back' | 'side')[] = ['front', 'side', 'back', '3d'];
         const currentIndex = anglesOrder.indexOf(currentAngle);
         let nextIndex = currentIndex + direction;
@@ -59,25 +60,27 @@ export const Hero: React.FC<HeroProps> = ({
         setIsRotating(true);
         setCurrentAngle(anglesOrder[nextIndex]);
         setTimeout(() => setIsRotating(false), 150);
-        setDragStart(e.clientX);
+        setDragStart(e.clientX); // Anchor drag reference to current position for smooth continuous spin
       }
       return;
     }
 
-    // Mouse tilt effect
+    // 2. MOUSE TILT: Calculate card tilt angles relative to container center
     const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = e.clientX - rect.left; // Mouse X relative to container
+    const y = e.clientY - rect.top;  // Mouse Y relative to container
     
     const centerX = rect.width / 2;
     const centerY = rect.height / 2;
     
+    // Tilt calculations: max 12 degrees of physical rotation
     const tiltX = -((y - centerY) / centerY) * 12;
     const tiltY = ((x - centerX) / centerX) * 12;
     
     setRotateX(tiltX);
     setRotateY(tiltY);
     
+    // Dynamic light reflection/shine position following the cursor
     const percentX = (x / rect.width) * 100;
     const percentY = (y / rect.height) * 100;
     setShineStyle({
@@ -86,7 +89,7 @@ export const Hero: React.FC<HeroProps> = ({
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent text/image selection while dragging
     setDragStart(e.clientX);
     setIsDragging(true);
   };
@@ -94,6 +97,7 @@ export const Hero: React.FC<HeroProps> = ({
   const handleMouseUpOrLeave = () => {
     setDragStart(null);
     setIsDragging(false);
+    // Reset tilt transition smoothly when mouse exits the interactive boundary
     if (!isHovered) {
       setRotateX(0);
       setRotateY(0);
@@ -101,7 +105,7 @@ export const Hero: React.FC<HeroProps> = ({
     }
   };
 
-  // Touch handlers for mobile devices
+  // Mobile Touch handlers: Stage drag start location
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length > 0) {
       setDragStart(e.touches[0].clientX);
@@ -109,10 +113,11 @@ export const Hero: React.FC<HeroProps> = ({
     }
   };
 
+  // Mobile Touch handlers: Cycle angles on touch swipe
   const handleTouchMove = (e: React.TouchEvent) => {
     if (dragStart === null || e.touches.length === 0) return;
     const deltaX = e.touches[0].clientX - dragStart;
-    const threshold = 40;
+    const threshold = 40; // Lower threshold on mobile for faster responsiveness
     
     if (Math.abs(deltaX) > threshold) {
       const direction = deltaX > 0 ? -1 : 1;
