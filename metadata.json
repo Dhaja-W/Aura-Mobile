@@ -1,0 +1,6 @@
+{
+  "name": "Aura Mobile",
+  "description": "Ultra-premium minimalist e-commerce store for luxury smartphones and accessories, crafted with Grade 5 Titanium design.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
