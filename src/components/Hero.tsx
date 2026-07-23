@@ -19,6 +19,16 @@ export const Hero: React.FC<HeroProps> = ({
   const [currentAngle, setCurrentAngle] = useState<'3d' | 'front' | 'back' | 'side'>('3d');
   const [isRotating, setIsRotating] = useState(false);
 
+  // 3D Card tilt states
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [shineStyle, setShineStyle] = useState<React.CSSProperties>({});
+
+  // Drag states for manual rotation
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   const angleImages = {
     '3d': selectedColor.imageAngle3D,
     'front': selectedColor.imageAngleFront,
@@ -30,6 +40,98 @@ export const Hero: React.FC<HeroProps> = ({
     setIsRotating(true);
     setCurrentAngle(angle);
     setTimeout(() => setIsRotating(false), 300);
+  };
+
+  // Drag to rotate handlers
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragStart !== null) {
+      const deltaX = e.clientX - dragStart;
+      const threshold = 60; // drag 60px to rotate
+      
+      if (Math.abs(deltaX) > threshold) {
+        const direction = deltaX > 0 ? -1 : 1;
+        const anglesOrder: ('3d' | 'front' | 'back' | 'side')[] = ['front', 'side', 'back', '3d'];
+        const currentIndex = anglesOrder.indexOf(currentAngle);
+        let nextIndex = currentIndex + direction;
+        if (nextIndex < 0) nextIndex = anglesOrder.length - 1;
+        if (nextIndex >= anglesOrder.length) nextIndex = 0;
+        
+        setIsRotating(true);
+        setCurrentAngle(anglesOrder[nextIndex]);
+        setTimeout(() => setIsRotating(false), 150);
+        setDragStart(e.clientX);
+      }
+      return;
+    }
+
+    // Mouse tilt effect
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    
+    const tiltX = -((y - centerY) / centerY) * 12;
+    const tiltY = ((x - centerX) / centerX) * 12;
+    
+    setRotateX(tiltX);
+    setRotateY(tiltY);
+    
+    const percentX = (x / rect.width) * 100;
+    const percentY = (y / rect.height) * 100;
+    setShineStyle({
+      background: `radial-gradient(circle at ${percentX}% ${percentY}%, rgba(255, 255, 255, 0.4) 0%, transparent 60%)`,
+    });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setDragStart(e.clientX);
+    setIsDragging(true);
+  };
+
+  const handleMouseUpOrLeave = () => {
+    setDragStart(null);
+    setIsDragging(false);
+    if (!isHovered) {
+      setRotateX(0);
+      setRotateY(0);
+      setShineStyle({});
+    }
+  };
+
+  // Touch handlers for mobile devices
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length > 0) {
+      setDragStart(e.touches[0].clientX);
+      setIsDragging(true);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (dragStart === null || e.touches.length === 0) return;
+    const deltaX = e.touches[0].clientX - dragStart;
+    const threshold = 40;
+    
+    if (Math.abs(deltaX) > threshold) {
+      const direction = deltaX > 0 ? -1 : 1;
+      const anglesOrder: ('3d' | 'front' | 'back' | 'side')[] = ['front', 'side', 'back', '3d'];
+      const currentIndex = anglesOrder.indexOf(currentAngle);
+      let nextIndex = currentIndex + direction;
+      if (nextIndex < 0) nextIndex = anglesOrder.length - 1;
+      if (nextIndex >= anglesOrder.length) nextIndex = 0;
+      
+      setIsRotating(true);
+      setCurrentAngle(anglesOrder[nextIndex]);
+      setTimeout(() => setIsRotating(false), 150);
+      setDragStart(e.touches[0].clientX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setDragStart(null);
+    setIsDragging(false);
   };
 
   return (
@@ -119,18 +221,54 @@ export const Hero: React.FC<HeroProps> = ({
             </div>
 
             {/* Product Image Frame */}
-            <div className="relative w-full max-w-lg aspect-4/3 flex items-center justify-center my-4">
+            <div 
+              onMouseMove={handleMouseMove}
+              onMouseDown={handleMouseDown}
+              onMouseUp={handleMouseUpOrLeave}
+              onMouseLeave={() => {
+                setIsHovered(false);
+                handleMouseUpOrLeave();
+              }}
+              onMouseEnter={() => setIsHovered(true)}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              className={`relative w-full max-w-lg aspect-4/3 flex items-center justify-center my-4 select-none ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              }`}
+              style={{
+                transform: isHovered && !isDragging
+                  ? `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`
+                  : 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)',
+                transition: isHovered && !isDragging ? 'transform 0.05s ease-out' : 'transform 0.5s ease-out',
+                transformStyle: 'preserve-3d',
+              }}
+            >
               <img
                 src={angleImages[currentAngle]}
                 alt={`Aura 16 Pro Max in ${selectedColor.name}`}
-                className={`max-h-[380px] sm:max-h-[460px] w-auto object-contain transition-all duration-500 drop-shadow-2xl ${
+                className={`max-h-[380px] sm:max-h-[460px] w-auto object-contain transition-all duration-500 drop-shadow-2xl pointer-events-none select-none ${
                   isRotating ? 'scale-95 opacity-50 rotate-2' : 'scale-100 opacity-100 rotate-0'
                 }`}
                 referrerPolicy="no-referrer"
               />
 
+              {/* Dynamic Shine Layer */}
+              {isHovered && !isDragging && (
+                <div 
+                  className="absolute inset-0 pointer-events-none mix-blend-overlay rounded-3xl"
+                  style={shineStyle}
+                />
+              )}
+
+              {/* Drag/Interactive Indicator overlay */}
+              <div className="absolute bottom-[-15px] text-[10px] font-mono text-neutral-400 bg-neutral-900/80 text-white px-2.5 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-1.5 shadow-sm pointer-events-none backdrop-blur-xs">
+                <Rotate3d className="w-3.5 h-3.5 animate-pulse" />
+                <span>Drag to spin • Hover to tilt</span>
+              </div>
+
               {/* Floating Spec Hotspots */}
-              <div className="absolute bottom-2 left-4 bg-white/95 border border-neutral-200/90 rounded-2xl p-3 shadow-xl backdrop-blur-md hidden sm:flex items-center gap-3 animate-bounce-subtle">
+              <div className="absolute bottom-2 left-4 bg-white/95 border border-neutral-200/90 rounded-2xl p-3 shadow-xl backdrop-blur-md hidden sm:flex items-center gap-3 animate-bounce-subtle select-none pointer-events-none">
                 <div className="w-9 h-9 rounded-xl bg-neutral-950 text-white flex items-center justify-center">
                   <ShieldCheck className="w-5 h-5 text-amber-400" />
                 </div>
@@ -140,7 +278,7 @@ export const Hero: React.FC<HeroProps> = ({
                 </div>
               </div>
 
-              <div className="absolute top-12 right-4 bg-white/95 border border-neutral-200/90 rounded-2xl p-3 shadow-xl backdrop-blur-md hidden sm:flex items-center gap-3">
+              <div className="absolute top-12 right-4 bg-white/95 border border-neutral-200/90 rounded-2xl p-3 shadow-xl backdrop-blur-md hidden sm:flex items-center gap-3 select-none pointer-events-none">
                 <div className="w-9 h-9 rounded-xl bg-neutral-950 text-white flex items-center justify-center">
                   <Cpu className="w-5 h-5 text-emerald-400" />
                 </div>
