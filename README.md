@@ -18,4 +18,3 @@ View your app in AI Studio: https://ai.studio/apps/caa9c72b-90f3-4cbd-a33c-c301a
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
-"# Aura-Mobile" 
