@@ -131,10 +131,52 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* Legal Bottom Bar */}
-        <div className="pt-8 border-t border-neutral-900 flex flex-col md:flex-row items-center justify-between gap-4 text-[11px] text-neutral-500 font-mono">
-          <div>
-            Copyright © 2026 Aura Mobile Technologies Inc. All rights reserved. Powered by StackUnleash.
+        {/* Legal Bottom Bar - Updated with StackUnleash Logo */}
+        <div className="pt-8 border-t border-neutral-900 flex flex-col md:flex-row items-center justify-between gap-6 text-[11px] text-neutral-500 font-mono">
+          
+          <div className="flex flex-col md:flex-row items-center gap-4">
+            {/* ---> Paste Karapu StackUnleash Logo Eka <--- */}
+            <a
+              href="https://stackunleash.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-start group scale-75 origin-center md:origin-left hover:opacity-80 transition-opacity"
+            >
+              <div className="transition-transform duration-300 group-hover:scale-105 flex-shrink-0">
+                <img src="/logo-icon.png" alt="StackUnleash Icon" className="h-[54px] sm:h-[62px] w-auto object-contain" />
+              </div>
+              <div className="flex flex-col items-start pt-[11px] sm:pt-[13px] -ml-2 sm:-ml-3 w-full">
+                <div className="flex flex-col w-full leading-none">
+                  <div
+                    className="w-full flex justify-between text-[15.5px] sm:text-[17px] font-black leading-[0.85] orange-gradient-text"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    <span>S</span><span>T</span><span>A</span><span>C</span><span>K</span>
+                  </div>
+                  <span
+                    className="text-[14.5px] sm:text-[16px] font-black tracking-tight leading-[0.85] gradient-text mt-[1px] block whitespace-nowrap"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    UNLEASH
+                  </span>
+                </div>
+                <div
+                  className="w-full flex justify-between text-[5px] sm:text-[5.5px] font-black uppercase mt-1 shine-text"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  <span>BUILD</span>
+                  <span>&bull;</span>
+                  <span>AUTOMATE</span>
+                  <span>&bull;</span>
+                  <span>SCALE</span>
+                </div>
+              </div>
+            </a>
+            {/* ---> Logo Eka Iwarai <--- */}
+
+            <div className="text-center md:text-left mt-2 md:mt-0">
+              Copyright © 2026 Aura Mobile Technologies Inc. All rights reserved.
+            </div>
           </div>
 
           <div className="flex items-center space-x-4">
